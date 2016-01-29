@@ -38,17 +38,22 @@ namespace NeuralNetwork
             return labels.Select(label => knownLabels[label]);
         }
 
+        private static IEnumerable<double> GenerateWeights(int inputNodes, int outputNodes)
+        {
+            return null;
+        }
+
         private void Train(IEnumerable<IEnumerable<double>> data, IEnumerable<int> labels, int hiddenLayerSize,
             int hiddenLayerCount, double regularization)
         {
-
+        
         }
 
         /// <summary>
         /// Predicts a class for the specified data.
         /// </summary>
         /// <param name="data">The data.</param>
-        /// <returns></returns>
+        /// <returns>The predicted class.</returns>
         public T Predict(IEnumerable<double> data)
         {
             return GetOriginalLabel(0).First();
