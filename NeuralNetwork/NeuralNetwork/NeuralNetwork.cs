@@ -12,28 +12,28 @@ namespace NeuralNetwork
         private List<T> knownLabels;
         private List<double[,]> weights;
         private Random random = new Random();
-        
+
         /// <summary>
         /// Initializes a neural network.
         /// </summary>
-        /// <param name="data">The training data. Each example is represented as a list of features.</param>
+        /// <param name="examples">The training data. Each example is represented as a list of features.</param>
         /// <param name="labels">A list of labels, one for every example.</param>
-        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels)
+        public NeuralNetwork(IEnumerable<IEnumerable<double>> examples, IEnumerable<T> labels)
         {
             // Stores the unique labels.
             knownLabels = labels.Distinct().ToList();
             
             // Trains the network.
-            Train(data, GetIntegerLabel(labels.ToArray()), 2 * data.First().Count(), 1, 1.0);
+            Train(examples, GetIntegerLabel(labels.ToArray()), 2 * examples.First().Count(), 1, 1.0);
         }
 
         /// <summary>
         /// Initializes a neural network.
         /// </summary>
-        /// <param name="data">The training data. Each example is represented as a list of features.</param>
+        /// <param name="examples">The training data. Each example is represented as a list of features.</param>
         /// <param name="labels">A list of labels, one for every example.</param>
         /// <param name="seed">The seed used to generate randomness.</param>
-        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels, int seed)
+        public NeuralNetwork(IEnumerable<IEnumerable<double>> examples, IEnumerable<T> labels, int seed)
         {
             random = new Random(seed);
 
@@ -41,37 +41,37 @@ namespace NeuralNetwork
             knownLabels = labels.Distinct().ToList();
 
             // Trains the network.
-            Train(data, GetIntegerLabel(labels.ToArray()), 2 * data.First().Count(), 1, 1.0);
+            Train(examples, GetIntegerLabel(labels.ToArray()), 2 * examples.First().Count(), 1, 1.0);
         }
 
         /// <summary>
         /// Initializes a neural network.
         /// </summary>
-        /// <param name="data">The training data. Each example is represented as a list of features.</param>
+        /// <param name="examples">The training data. Each example is represented as a list of features.</param>
         /// <param name="labels">A list of labels, one for every example.</param>
         /// <param name="hiddenLayerSize">The number of nodes in each hidden layer.</param>
         /// <param name="hiddenLayerCount">The number of hidden layers.</param>
         /// <param name="regularization">The regularization parameter. Used to prevent overfitting.</param>
-        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels, int hiddenLayerSize,
+        public NeuralNetwork(IEnumerable<IEnumerable<double>> examples, IEnumerable<T> labels, int hiddenLayerSize,
             int hiddenLayerCount, double regularization = 1.0)
         {
             // Stores the unique labels.
             knownLabels = labels.Distinct().ToList();
 
             // Trains the network.
-            Train(data, GetIntegerLabel(labels.ToArray()), hiddenLayerSize, hiddenLayerCount, regularization);
+            Train(examples, GetIntegerLabel(labels.ToArray()), hiddenLayerSize, hiddenLayerCount, regularization);
         }
 
         /// <summary>
         /// Initializes a neural network.
         /// </summary>
-        /// <param name="data">The training data. Each example is represented as a list of features.</param>
+        /// <param name="examples">The training data. Each example is represented as a list of features.</param>
         /// <param name="labels">A list of labels, one for every example.</param>
         /// <param name="seed">The seed used to generate randomness.</param>
         /// <param name="hiddenLayerSize">The number of nodes in each hidden layer.</param>
         /// <param name="hiddenLayerCount">The number of hidden layers.</param>
         /// <param name="regularization">The regularization parameter. Used to prevent overfitting.</param>
-        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels, int seed,
+        public NeuralNetwork(IEnumerable<IEnumerable<double>> examples, IEnumerable<T> labels, int seed,
             int hiddenLayerSize, int hiddenLayerCount, double regularization = 1.0)
         {
             random = new Random(seed);
@@ -80,7 +80,7 @@ namespace NeuralNetwork
             knownLabels = labels.Distinct().ToList();
 
             // Trains the network.
-            Train(data, GetIntegerLabel(labels.ToArray()), hiddenLayerSize, hiddenLayerCount, regularization);
+            Train(examples, GetIntegerLabel(labels.ToArray()), hiddenLayerSize, hiddenLayerCount, regularization);
         }
 
         private IEnumerable<int> GetIntegerLabel(params T[] labels)
@@ -143,31 +143,19 @@ namespace NeuralNetwork
             return weights;
         }
 
-        private void Train(IEnumerable<IEnumerable<double>> data, IEnumerable<int> labels, int hiddenLayerSize,
-            int hiddenLayerCount, double regularization)
-        {
-            var inputLayerSize = data.First().Count();
-            var outputLayerSize = labels.Count();
-
-            weights = GenerateWeights(inputLayerSize, hiddenLayerSize, outputLayerSize, hiddenLayerCount);
-        }
-
-        /// <summary>
-        /// Predicts a class for the specified data.
-        /// </summary>
-        /// <param name="data">The data.</param>
-        /// <returns>The predicted class.</returns>
-        public T Predict(IEnumerable<double> data)
+        // Gets the activations of every layer.
+        private List<List<double>> GetActivations(IEnumerable<double> data)
         {
             var input = new List<double>(data);
+            var activations = new List<List<double>>();
 
             // Iterates through the weights of every layer.
             foreach (var weights in weights)
             {
+                activations.Add(new List<double>());
+
                 // Prepends the bias term.
                 input.Insert(0, 1);
-
-                var activations = new List<double>();
 
                 for (int outputNodeIndex = 0; outputNodeIndex < weights.GetLength(0); ++outputNodeIndex)
                 {
@@ -178,16 +166,45 @@ namespace NeuralNetwork
                         activation += input[inputNodeIndex] * weights[outputNodeIndex, inputNodeIndex];
                     }
 
-                    activations.Add(MathHelpers.Sigmoid(activation));
+                    activations.Last().Add(MathHelpers.Sigmoid(activation));
                 }
 
-                input = activations;
+                input = activations.Last();
             }
 
-            var maxIndex = input.IndexOf(input.Max());
-            var prediction = GetOriginalLabel(maxIndex).First();
+            return activations;
+        }
 
-            return prediction;
+        private void Train(IEnumerable<IEnumerable<double>> examples, IEnumerable<int> labels, int hiddenLayerSize,
+            int hiddenLayerCount, double regularization)
+        {
+            var inputLayerSize = examples.First().Count();
+            var outputLayerSize = labels.Count();
+
+            weights = GenerateWeights(inputLayerSize, hiddenLayerSize, outputLayerSize, hiddenLayerCount);
+
+            foreach (var example in examples)
+            {
+                var activations = GetActivations(example);
+
+                // TO-DO.
+            }
+        }
+
+        /// <summary>
+        /// Predicts a class for the specified data.
+        /// </summary>
+        /// <param name="data">The data.</param>
+        /// <returns>The predicted class.</returns>
+        public T Predict(IEnumerable<double> data)
+        {
+            // Gets the activations of the output layer.
+            var activations = GetActivations(data).Last();
+
+            // The predicted label is the index of the node with the highest activation.
+            var label = activations.IndexOf(activations.Max());
+
+            return GetOriginalLabel(label).First();
         }
     }
 }
