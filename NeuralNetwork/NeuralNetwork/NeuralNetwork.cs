@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace NeuralNetwork
@@ -9,7 +10,40 @@ namespace NeuralNetwork
     public class NeuralNetwork<T>
     {
         private List<T> knownLabels;
+        private List<double[,]> weights;
+        private Random random = new Random();
         
+        /// <summary>
+        /// Initializes a neural network.
+        /// </summary>
+        /// <param name="data">The training data. Each example is represented as a list of features.</param>
+        /// <param name="labels">A list of labels, one for every example.</param>
+        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels)
+        {
+            // Stores the unique labels.
+            knownLabels = labels.Distinct().ToList();
+            
+            // Trains the network.
+            Train(data, GetIntegerLabel(labels.ToArray()), 2 * data.First().Count(), 1, 1.0);
+        }
+
+        /// <summary>
+        /// Initializes a neural network.
+        /// </summary>
+        /// <param name="data">The training data. Each example is represented as a list of features.</param>
+        /// <param name="labels">A list of labels, one for every example.</param>
+        /// <param name="seed">The seed used to generate randomness.</param>
+        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels, int seed)
+        {
+            random = new Random(seed);
+
+            // Stores the unique labels.
+            knownLabels = labels.Distinct().ToList();
+
+            // Trains the network.
+            Train(data, GetIntegerLabel(labels.ToArray()), 2 * data.First().Count(), 1, 1.0);
+        }
+
         /// <summary>
         /// Initializes a neural network.
         /// </summary>
@@ -17,10 +51,31 @@ namespace NeuralNetwork
         /// <param name="labels">A list of labels, one for every example.</param>
         /// <param name="hiddenLayerSize">The number of nodes in each hidden layer.</param>
         /// <param name="hiddenLayerCount">The number of hidden layers.</param>
-        /// <param name="regularization">The regularization parameter. It is used to avoid overfitting.</param>
-        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels, int hiddenLayerSize = 1,
-            int hiddenLayerCount = 1, double regularization = 1.0)
+        /// <param name="regularization">The regularization parameter. Used to prevent overfitting.</param>
+        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels, int hiddenLayerSize,
+            int hiddenLayerCount, double regularization = 1.0)
         {
+            // Stores the unique labels.
+            knownLabels = labels.Distinct().ToList();
+
+            // Trains the network.
+            Train(data, GetIntegerLabel(labels.ToArray()), hiddenLayerSize, hiddenLayerCount, regularization);
+        }
+
+        /// <summary>
+        /// Initializes a neural network.
+        /// </summary>
+        /// <param name="data">The training data. Each example is represented as a list of features.</param>
+        /// <param name="labels">A list of labels, one for every example.</param>
+        /// <param name="seed">The seed used to generate randomness.</param>
+        /// <param name="hiddenLayerSize">The number of nodes in each hidden layer.</param>
+        /// <param name="hiddenLayerCount">The number of hidden layers.</param>
+        /// <param name="regularization">The regularization parameter. Used to prevent overfitting.</param>
+        public NeuralNetwork(IEnumerable<IEnumerable<double>> data, IEnumerable<T> labels, int seed,
+            int hiddenLayerSize, int hiddenLayerCount, double regularization = 1.0)
+        {
+            random = new Random(seed);
+
             // Stores the unique labels.
             knownLabels = labels.Distinct().ToList();
 
@@ -38,15 +93,63 @@ namespace NeuralNetwork
             return labels.Select(label => knownLabels[label]);
         }
 
-        private static IEnumerable<double> GenerateWeights(int inputNodes, int outputNodes)
+        // Generates weights for a layer with the specified number of input nodes and the specified number of output nodes.
+        private double[,] GenerateWeights(int inputNodeCount, int outputNodeCount)
         {
-            return null;
+            // Restricts the weights to +-epsilon.
+            const double epsilon = 0.12;
+
+            // Increments the inputNodeCount to take the bias node into consideration.
+            var weights = new double[outputNodeCount, inputNodeCount + 1];
+
+            for (int outputNodeIndex = 0; outputNodeIndex < weights.GetLength(0); ++outputNodeIndex)
+            {
+                for (int inputNodeIndex = 0; inputNodeIndex < weights.GetLength(1); ++inputNodeIndex)
+                {
+                    weights[outputNodeIndex, inputNodeIndex] = epsilon * (2 * random.NextDouble() - 1);
+                }
+            }
+
+            return weights;
+        }
+
+        // Generates weights for a neural network with the specified configuration.
+        private List<double[,]> GenerateWeights(int inputLayerSize, int hiddenLayerSize, int outputLayerSize,
+            int hiddenLayerCount)
+        {
+            var weights = new List<double[,]>();
+
+            // Determines whether hidden layers exist.
+            if (hiddenLayerCount == 0)
+            {
+                // Maps the input layer directly to the output layer.
+                weights.Add(GenerateWeights(inputLayerSize, outputLayerSize));
+            }
+            else
+            {
+                // Maps the input layer to the first hidden layer.
+                weights.Add(GenerateWeights(inputLayerSize, hiddenLayerSize));
+
+                while (--hiddenLayerCount > 0)
+                {
+                    // Maps this hidden layer to the next hidden layer.
+                    weights.Add(GenerateWeights(hiddenLayerSize, hiddenLayerSize));
+                }
+
+                // Maps the last hidden layer to the output layer.
+                weights.Add(GenerateWeights(hiddenLayerSize, outputLayerSize));
+            }
+
+            return weights;
         }
 
         private void Train(IEnumerable<IEnumerable<double>> data, IEnumerable<int> labels, int hiddenLayerSize,
             int hiddenLayerCount, double regularization)
         {
-        
+            var inputLayerSize = data.First().Count();
+            var outputLayerSize = labels.Count();
+
+            weights = GenerateWeights(inputLayerSize, hiddenLayerSize, outputLayerSize, hiddenLayerCount);
         }
 
         /// <summary>
@@ -56,7 +159,35 @@ namespace NeuralNetwork
         /// <returns>The predicted class.</returns>
         public T Predict(IEnumerable<double> data)
         {
-            return GetOriginalLabel(0).First();
+            var input = new List<double>(data);
+
+            // Iterates through the weights of every layer.
+            foreach (var weights in weights)
+            {
+                // Prepends the bias term.
+                input.Insert(0, 1);
+
+                var activations = new List<double>();
+
+                for (int outputNodeIndex = 0; outputNodeIndex < weights.GetLength(0); ++outputNodeIndex)
+                {
+                    double activation = 0;
+
+                    for (int inputNodeIndex = 0; inputNodeIndex < weights.GetLength(1); ++inputNodeIndex)
+                    {
+                        activation += input[inputNodeIndex] * weights[outputNodeIndex, inputNodeIndex];
+                    }
+
+                    activations.Add(MathHelpers.Sigmoid(activation));
+                }
+
+                input = activations;
+            }
+
+            var maxIndex = input.IndexOf(input.Max());
+            var prediction = GetOriginalLabel(maxIndex).First();
+
+            return prediction;
         }
     }
 }
