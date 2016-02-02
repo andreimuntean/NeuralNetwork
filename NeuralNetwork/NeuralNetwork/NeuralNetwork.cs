@@ -144,35 +144,71 @@ namespace NeuralNetwork
         }
 
         // Gets the activations of every layer.
-        private List<List<double>> GetActivations(IEnumerable<double> data)
+        private ForwardPropagationResult PropagateForwards(IEnumerable<double> data)
         {
-            var input = new List<double>(data);
+            var sums = new List<List<double>>();
             var activations = new List<List<double>>();
+
+            // Stores the activation of the input layer.
+            activations.Add(data.ToList());
 
             // Iterates through the weights of every layer.
             foreach (var weights in weights)
             {
+                var previousActivation = activations.Last();
+
+                sums.Add(new List<double>());
                 activations.Add(new List<double>());
 
                 // Prepends the bias term.
-                input.Insert(0, 1);
+                previousActivation.Insert(0, 1);
 
+                // Sums the input nodes for every output node.
                 for (int outputNodeIndex = 0; outputNodeIndex < weights.GetLength(0); ++outputNodeIndex)
                 {
-                    double activation = 0;
+                    double sum = 0;
 
                     for (int inputNodeIndex = 0; inputNodeIndex < weights.GetLength(1); ++inputNodeIndex)
                     {
-                        activation += input[inputNodeIndex] * weights[outputNodeIndex, inputNodeIndex];
+                        sum += previousActivation[inputNodeIndex] * weights[outputNodeIndex, inputNodeIndex];
                     }
 
-                    activations.Last().Add(MathHelpers.Sigmoid(activation));
+                    // Stores the sum and activation for this output node.
+                    sums.Last().Add(sum);
+                    activations.Last().Add(MathHelpers.Sigmoid(sum));
                 }
-
-                input = activations.Last();
             }
 
-            return activations;
+            return new ForwardPropagationResult(sums, activations);
+        }
+
+        private BackwardPropagationResult PropagateBackwards(ForwardPropagationResult forwardPropagationResult, int label)
+        {
+            var errors = new List<List<double>>();
+            var activations = forwardPropagationResult.Activations;
+            var sums = forwardPropagationResult.Sums;
+
+            // Initializes the error list.
+            foreach (var weights in weights)
+            {
+                errors.Add(new List<double>());
+            }
+
+            // Calculates the errors for the output layer.
+            foreach (var activation in activations[activations.Count - 1])
+            {
+                errors[errors.Count - 1].Add(activation);
+            }
+
+            errors[errors.Count - 1][label] -= 1;
+
+            // Calculates the errors for the hidden layers.
+            for (int index = errors.Count - 2; index >= 0; --index)
+            {
+                // TO-DO.
+            }
+
+            return new BackwardPropagationResult(errors);
         }
 
         private void Train(IEnumerable<IEnumerable<double>> examples, IEnumerable<int> labels, int hiddenLayerSize,
@@ -183,9 +219,10 @@ namespace NeuralNetwork
 
             weights = GenerateWeights(inputLayerSize, hiddenLayerSize, outputLayerSize, hiddenLayerCount);
 
-            foreach (var example in examples)
+            for (int index = 0; index < examples.Count(); ++index)
             {
-                var activations = GetActivations(example);
+                var forwardPropagationResult = PropagateForwards(examples.ElementAt(index));
+                var backwardPropagationResult = PropagateBackwards(forwardPropagationResult, labels.ElementAt(index));
 
                 // TO-DO.
             }
@@ -198,11 +235,7 @@ namespace NeuralNetwork
         /// <returns>The predicted class.</returns>
         public T Predict(IEnumerable<double> data)
         {
-            // Gets the activations of the output layer.
-            var activations = GetActivations(data).Last();
-
-            // The predicted label is the index of the node with the highest activation.
-            var label = activations.IndexOf(activations.Max());
+            var label = PropagateForwards(data).Prediction;
 
             return GetOriginalLabel(label).First();
         }
