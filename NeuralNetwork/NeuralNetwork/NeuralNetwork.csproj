@@ -44,7 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions.cs" />
-    <Compile Include="BackwardPropagationResult.cs" />
     <Compile Include="ForwardPropagationResult.cs" />
     <Compile Include="MathHelpers.cs" />
     <Compile Include="NeuralNetwork.cs" />

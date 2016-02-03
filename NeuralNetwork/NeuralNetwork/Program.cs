@@ -5,7 +5,7 @@ namespace NeuralNetwork
 {
     class Program
     {
-        static void Main(string[] args)
+        static void ColorTest()
         {
             var data = new List<List<double>>
             {
@@ -49,6 +49,47 @@ namespace NeuralNetwork
             }
 
             Console.Read();
+        }
+
+        static void XORTest()
+        {
+            var data = new List<List<double>>
+            {
+                new List<double> { 0, 0 },
+                new List<double> { 0, 1 },
+                new List<double> { 1, 0 },
+                new List<double> { 1, 1 }
+            };
+
+            int[] labels =
+            {
+                0,
+                1,
+                1,
+                0
+            };
+
+            var tests = new List<List<double>>
+            {
+                new List<double> { 0, 0 },
+                new List<double> { 0, 1 },
+                new List<double> { 1, 0 },
+                new List<double> { 1, 1 }
+            };
+
+            var neuralNetwork = new NeuralNetwork<int>(data, labels, 2, 1, regularization: 0);
+
+            foreach (var test in tests)
+            {
+                Console.WriteLine(string.Join(" ", test) + " is " + neuralNetwork.Predict(test));
+            }
+
+            Console.Read();
+        }
+
+        static void Main(string[] args)
+        {
+            XORTest();
         }
     }
 }

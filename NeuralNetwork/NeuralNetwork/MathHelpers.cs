@@ -17,13 +17,13 @@ namespace NeuralNetwork
         }
 
         /// <summary>
-        /// Computes the gradient of the logistic sigmoid function for the specified values.
+        /// Computes the gradient of the logistic sigmoid function.
         /// </summary>
-        /// <param name="values">The values.</param>
-        /// <returns>Values between 0 and 1.</returns>
-        public static IEnumerable<double> SigmoidGradient(IEnumerable<double> values)
+        /// <param name="value">The value.</param>
+        /// <returns>A value between 0 and 1.</returns>
+        public static double SigmoidGradient(double value)
         {
-            return values.Select(value => Sigmoid(value) * (1 - Sigmoid(value)));
+            return Sigmoid(value) * (1 - Sigmoid(value));
         }
     }
 }
