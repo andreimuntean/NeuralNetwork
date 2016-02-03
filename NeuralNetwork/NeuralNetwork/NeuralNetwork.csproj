@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CostManager.cs" />
+    <Compile Include="PropagationManager.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="ForwardPropagationResult.cs" />
     <Compile Include="MathHelpers.cs" />

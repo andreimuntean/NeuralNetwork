@@ -35,13 +35,19 @@ namespace NeuralNetwork
 
             var tests = new List<List<double>>
             {
+                new List<double> { 235, 250, 246 },
                 new List<double> { 235, 15, 92 },
+                new List<double> { 93, 255, 94 },
                 new List<double> { 35, 64, 249 },
-                new List<double> { 25, 15, 48 },
-                new List<double> { 123, 100, 130 }
+                new List<double> { 249, 250, 3 },
+                new List<double> { 245, 0, 245 },
+                new List<double> { 0, 255, 255 },
+                new List<double> { 123, 111, 130 },
+                new List<double> { 8, 8, 8 },
+                new List<double> { 25, 15, 38 }
             };
 
-            var neuralNetwork = new NeuralNetwork<string>(data, labels);
+            var neuralNetwork = new NeuralNetwork<string>(data, labels, 9, 2, 0.01);
 
             foreach (var test in tests)
             {
@@ -77,7 +83,7 @@ namespace NeuralNetwork
                 new List<double> { 1, 1 }
             };
 
-            var neuralNetwork = new NeuralNetwork<int>(data, labels, 2, 1, regularization: 0);
+            var neuralNetwork = new NeuralNetwork<int>(data, labels);
 
             foreach (var test in tests)
             {
@@ -89,7 +95,7 @@ namespace NeuralNetwork
 
         static void Main(string[] args)
         {
-            XORTest();
+            ColorTest();
         }
     }
 }
