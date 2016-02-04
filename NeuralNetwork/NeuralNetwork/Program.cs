@@ -47,7 +47,7 @@ namespace NeuralNetwork
                 new List<double> { 25, 15, 38 }
             };
 
-            var neuralNetwork = new NeuralNetwork<string>(data, labels, 9, 2, 0.01);
+            var neuralNetwork = new NeuralNetwork<string>(data, labels, 20, 1, 0.01);
 
             foreach (var test in tests)
             {

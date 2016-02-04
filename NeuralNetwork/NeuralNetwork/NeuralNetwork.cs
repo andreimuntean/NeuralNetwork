@@ -24,7 +24,7 @@ namespace NeuralNetwork
             knownLabels = labels.Distinct().ToList();
             
             // Trains the network.
-            Train(examples, GetIntegerLabel(labels.ToArray()), examples.First().Count(), 1, 0);
+            Train(examples, GetIntegerLabel(labels.ToArray()), 3 * examples.First().Count(), 1, 0);
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace NeuralNetwork
             knownLabels = labels.Distinct().ToList();
 
             // Trains the network.
-            Train(examples, GetIntegerLabel(labels.ToArray()), examples.First().Count(), 1, 0);
+            Train(examples, GetIntegerLabel(labels.ToArray()), 3 * examples.First().Count(), 1, 0);
         }
 
         /// <summary>
@@ -146,13 +146,12 @@ namespace NeuralNetwork
         private void Train(IEnumerable<IEnumerable<double>> examples, IEnumerable<int> labels, int hiddenLayerSize,
             int hiddenLayerCount, double regularization)
         {
-            const double maximumIterations = 500000;
-            const double minimumCostDifference = 1e-30;
+            const int maximumIterations = 1000000;
+            const double minimumCostDifference = 1e-100;
             const double minimumCost = 1e-4;
-            const double minimumLearningRate = 1e-5;
             const double learningRateAcceleration = 1.5;
             const double learningRateDeceleration = 0.3;
-            const double accelerationRate = 1000;
+            const int accelerationRate = 1000;
 
             // Determines the speed at which the weights are updated.
             double learningRate = 1;
@@ -169,7 +168,7 @@ namespace NeuralNetwork
 
             var newWeights = weights;
             List<ForwardPropagationResult> previousResults = null;
-            int consecutiveCostDecreaseCount = 0;
+            int consecutiveSteps = 0;
 
             for (int iteration = 1; iteration <= maximumIterations; ++iteration)
             {
@@ -193,14 +192,13 @@ namespace NeuralNetwork
                     // Reduces the learning rate and iterates again.
                     learningRate *= learningRateDeceleration;
                     newWeights = PropagationManager.PropagateBackwards(weights, previousResults, labels, learningRate, regularization);
-                    consecutiveCostDecreaseCount = 0;
+                    consecutiveSteps = 0;
 
                     continue;
                 }
 
                 // Determines whether the training should stop.
                 if (costHistory.Count > 0 && costHistory.Last() - cost < minimumCostDifference
-                    || learningRate < minimumLearningRate
                     || cost < minimumCost)
                 {
                     // Stops the training.
@@ -214,11 +212,11 @@ namespace NeuralNetwork
                 newWeights = PropagationManager.PropagateBackwards(weights, results, labels, learningRate, regularization);
                 previousResults = results;
 
-                if (++consecutiveCostDecreaseCount > accelerationRate)
+                if (++consecutiveSteps > accelerationRate)
                 {
                     // Increases the learning rate.
                     learningRate *= learningRateAcceleration;
-                    consecutiveCostDecreaseCount = 0;
+                    consecutiveSteps = 0;
                 }
 
                 if ((iteration - 1) % 10000 == 0)
