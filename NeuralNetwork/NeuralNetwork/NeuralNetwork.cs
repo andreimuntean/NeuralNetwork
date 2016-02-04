@@ -156,9 +156,6 @@ namespace NeuralNetwork
             // Determines the speed at which the weights are updated.
             double learningRate = 1;
 
-            // Keeps track of previous costs. Used to modify the learning rate.
-            var costHistory = new List<double>();
-
             // Determines the sizes of the input and output layers.
             var inputLayerSize = examples.First().Count();
             var outputLayerSize = knownLabels.Count();
@@ -168,6 +165,7 @@ namespace NeuralNetwork
 
             var newWeights = weights;
             List<ForwardPropagationResult> previousResults = null;
+            var previousCost = double.MaxValue;
             int consecutiveSteps = 0;
 
             for (int iteration = 1; iteration <= maximumIterations; ++iteration)
@@ -187,7 +185,7 @@ namespace NeuralNetwork
                 var cost = CostManager.GetBatchCost(newWeights, exampleCosts, regularization);
 
                 // Determines whether the cost is increasing.
-                if (costHistory.Count > 0 && costHistory.Last() - cost < 0)
+                if (previousCost - cost < 0)
                 {
                     // Reduces the learning rate and iterates again.
                     learningRate *= learningRateDeceleration;
@@ -198,19 +196,18 @@ namespace NeuralNetwork
                 }
 
                 // Determines whether the training should stop.
-                if (costHistory.Count > 0 && costHistory.Last() - cost < minimumCostDifference
+                if (previousCost - cost < minimumCostDifference
                     || cost < minimumCost)
                 {
                     // Stops the training.
                     break;
                 }
-
-                costHistory.Add(cost);
-
+                
                 // Updates the weights.
                 weights = newWeights;
                 newWeights = PropagationManager.PropagateBackwards(weights, results, labels, learningRate, regularization);
                 previousResults = results;
+                previousCost = cost;
 
                 if (++consecutiveSteps > accelerationRate)
                 {
