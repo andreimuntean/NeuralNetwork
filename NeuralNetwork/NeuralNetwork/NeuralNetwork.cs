@@ -146,12 +146,11 @@ namespace NeuralNetwork
         private void Train(IEnumerable<IEnumerable<double>> examples, IEnumerable<int> labels, int hiddenLayerSize,
             int hiddenLayerCount, double regularization)
         {
-            const int maximumIterations = 1000000;
+            const int maximumIterations = 500000;
             const double minimumCostDifference = 1e-100;
             const double minimumCost = 1e-4;
-            const double learningRateAcceleration = 1.5;
+            const double learningRateAcceleration = 1.001;
             const double learningRateDeceleration = 0.3;
-            const int accelerationRate = 1000;
 
             // Determines the speed at which the weights are updated.
             double learningRate = 1;
@@ -166,7 +165,6 @@ namespace NeuralNetwork
             var newWeights = weights;
             List<ForwardPropagationResult> previousResults = null;
             var previousCost = double.MaxValue;
-            int consecutiveSteps = 0;
 
             for (int iteration = 1; iteration <= maximumIterations; ++iteration)
             {
@@ -190,31 +188,25 @@ namespace NeuralNetwork
                     // Reduces the learning rate and iterates again.
                     learningRate *= learningRateDeceleration;
                     newWeights = PropagationManager.PropagateBackwards(weights, previousResults, labels, learningRate, regularization);
-                    consecutiveSteps = 0;
 
                     continue;
                 }
 
                 // Determines whether the training should stop.
-                if (previousCost - cost < minimumCostDifference
-                    || cost < minimumCost)
+                if (previousCost - cost < minimumCostDifference || cost < minimumCost)
                 {
                     // Stops the training.
                     break;
                 }
-                
-                // Updates the weights.
+
+                // Increases the learning rate and updates the weights.
+                learningRate *= learningRateAcceleration;
                 weights = newWeights;
+
+                // Stores data for the next iteration.
                 newWeights = PropagationManager.PropagateBackwards(weights, results, labels, learningRate, regularization);
                 previousResults = results;
                 previousCost = cost;
-
-                if (++consecutiveSteps > accelerationRate)
-                {
-                    // Increases the learning rate.
-                    learningRate *= learningRateAcceleration;
-                    consecutiveSteps = 0;
-                }
 
                 if ((iteration - 1) % 10000 == 0)
                 {
