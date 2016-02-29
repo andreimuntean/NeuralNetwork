@@ -40,6 +40,10 @@ namespace NeuralNetwork
                 new List<double> { 15, 240, 241 },
                 new List<double> { 7, 231, 226 },
 
+                new List<double> { 103, 61, 35 },
+                new List<double> { 145, 87, 49 },
+                new List<double> { 101, 58, 31 },
+
                 new List<double> { 123, 120, 121 },
                 new List<double> { 131, 131, 132 },
                 new List<double> { 120, 120, 120 },
@@ -82,6 +86,10 @@ namespace NeuralNetwork
                 "Cyan",
                 "Cyan",
 
+                "Brown",
+                "Brown",
+                "Brown",
+
                 "Gray",
                 "Gray",
                 "Gray",
@@ -113,14 +121,25 @@ namespace NeuralNetwork
                 new List<double> { 25, 15, 38 }
             };
 
-            var neuralNetwork = new NeuralNetwork<string>(data, labels, 500, 1, 2);
+            var neuralNetwork = new NeuralNetwork<string>(data, labels, 500, 1, 4);
 
             foreach (var test in tests)
             {
                 Console.WriteLine(string.Join(" ", test) + " is " + neuralNetwork.Predict(test));
             }
 
-            Console.Read();
+            string input;
+
+            while ((input = Console.ReadLine()) != "")
+            {
+                var color = input.Split(' ');
+                double red = double.Parse(color[0]);
+                double green = double.Parse(color[1]);
+                double blue = double.Parse(color[2]);
+                var test = new List<double> { red, green, blue };
+
+                Console.WriteLine(string.Join(" ", test) + " is " + neuralNetwork.Predict(test));
+            }
         }
 
         static void XORTest()
