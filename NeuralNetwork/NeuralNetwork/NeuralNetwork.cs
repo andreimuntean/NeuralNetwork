@@ -146,7 +146,7 @@ namespace NeuralNetwork
         private void Train(IEnumerable<IEnumerable<double>> examples, IEnumerable<int> labels, int hiddenLayerSize,
             int hiddenLayerCount, double regularization)
         {
-            const int maximumIterations = 1000;
+            const int maximumIterations = 10000;
             const double minimumCostDifference = 1e-100;
             const double minimumCost = 1e-4;
             const double learningRateAcceleration = 1.001;
