@@ -10,44 +10,110 @@ namespace NeuralNetwork
             var data = new List<List<double>>
             {
                 new List<double> { 255, 255, 255 },
+                new List<double> { 255, 245, 245 },
+                new List<double> { 245, 242, 250 },
+
                 new List<double> { 255, 0, 0 },
+                new List<double> { 240, 4, 3 },
+                new List<double> { 250, 10, 11 },
+
                 new List<double> { 0, 255, 0 },
+                new List<double> { 12, 243, 10 },
+                new List<double> { 4, 250, 3 },
+
                 new List<double> { 0, 0, 255 },
+                new List<double> { 12, 10, 235 },
+                new List<double> { 8, 11, 240 },
+
                 new List<double> { 255, 255, 0 },
+                new List<double> { 254, 245, 10 },
+                new List<double> { 248, 249, 7 },
+
                 new List<double> { 255, 0, 255 },
+                new List<double> { 235, 10, 240 },
+                new List<double> { 241, 8, 233 },
+                new List<double> { 200, 10, 240 },
+                new List<double> { 160, 4, 200 },
+                new List<double> { 153, 7, 160 },
+
                 new List<double> { 0, 255, 255 },
+                new List<double> { 15, 240, 241 },
+                new List<double> { 7, 231, 226 },
+
+                new List<double> { 123, 120, 121 },
+                new List<double> { 131, 131, 132 },
                 new List<double> { 120, 120, 120 },
+
+                new List<double> { 11, 6, 13 },
+                new List<double> { 3, 4, 2 },
                 new List<double> { 0, 0, 0 }
             };
 
             string[] labels =
             {
                 "White",
+                "White",
+                "White",
+
                 "Red",
+                "Red",
+                "Red",
+
                 "Green",
+                "Green",
+                "Green",
+
                 "Blue",
+                "Blue",
+                "Blue",
+
                 "Yellow",
+                "Yellow",
+                "Yellow",
+
                 "Purple",
+                "Purple",
+                "Purple",
+                "Purple",
+                "Purple",
+                "Purple",
+
                 "Cyan",
+                "Cyan",
+                "Cyan",
+
                 "Gray",
+                "Gray",
+                "Gray",
+
+                "Black",
+                "Black",
                 "Black"
             };
 
             var tests = new List<List<double>>
             {
+                new List<double> { 250, 250, 250 },
                 new List<double> { 235, 250, 246 },
+                new List<double> { 255, 26, 26 },
                 new List<double> { 235, 15, 92 },
+                new List<double> { 68, 184, 31 },
                 new List<double> { 93, 255, 94 },
                 new List<double> { 35, 64, 249 },
+                new List<double> { 15, 29, 202 },
                 new List<double> { 249, 250, 3 },
+                new List<double> { 255, 251, 40 },
                 new List<double> { 245, 0, 245 },
+                new List<double> { 250, 20, 250 },
                 new List<double> { 0, 255, 255 },
+                new List<double> { 45, 215, 223 },
                 new List<double> { 123, 111, 130 },
+                new List<double> { 121, 121, 121 },
                 new List<double> { 8, 8, 8 },
                 new List<double> { 25, 15, 38 }
             };
 
-            var neuralNetwork = new NeuralNetwork<string>(data, labels, 20, 1, 0.01);
+            var neuralNetwork = new NeuralNetwork<string>(data, labels, 500, 1, 2);
 
             foreach (var test in tests)
             {
